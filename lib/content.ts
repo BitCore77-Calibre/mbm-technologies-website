@@ -72,7 +72,7 @@ function exchangeLinks(): PortalLink[] {
 }
 
 function exchangeDestinations(): Destination[] {
-  return exchangeLinks().map(link => ({
+  return exchangeLinks().map((link): Destination => ({
     label: link.label,
     href: link.href,
     access: link.access === "public" ? "public" : "local",

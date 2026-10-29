@@ -73,6 +73,23 @@ jobs:
           echo "admin without password -> $code"; test "$code" = "401"
           curl -fsS -u "admin:ci-admin-password-123" http://127.0.0.1:3000/admin | grep -q "ci@example.com"
           echo "Docker smoke test passed"
+      - name: Screenshots for visual review
+        continue-on-error: true
+        run: |
+          npx -y playwright@1.55.0 install --with-deps chromium >/dev/null
+          mkdir -p screenshots
+          for page in "/" "/projects" "/projects/calibre-blockchain" "/contact" "/privacy" "/missing-page"; do
+            name=$(echo "$page" | sed 's#^/##; s#/#-#g'); name=${name:-home}
+            npx -y playwright@1.55.0 screenshot --full-page --viewport-size=1440,900 "http://127.0.0.1:3000$page" "screenshots/desktop-$name.png"
+          done
+          npx -y playwright@1.55.0 screenshot --full-page --viewport-size=390,844 "http://127.0.0.1:3000/" screenshots/mobile-home.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Container logs
         if: always()
         run: docker logs mbm 2>&1 | tail -80
