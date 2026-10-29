@@ -3,7 +3,7 @@ import { PageHero } from "../../components/page-hero";
 import { SubmissionForm } from "../../components/submission-form";
 import { roles } from "../../lib/content";
 
-export const metadata: Metadata = { title: "Careers", description: "Join the MBM Technologies global talent network for cybersecurity, blockchain, AI, DeFi and systems engineering roles." };
+export const metadata: Metadata = { title: "Careers", description: "Join the MBM Technologies global talent network for cybersecurity, blockchain, AI, DeFi and systems engineering roles.", alternates: { canonical: "/careers" } };
 
 export default function CareersPage() {
   return <main>

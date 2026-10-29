@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { PageHero } from "../../components/page-hero";
 import { SubmissionForm } from "../../components/submission-form";
+import { company } from "../../lib/site-config";
 
-export const metadata: Metadata = { title: "Start a Project", description: "Discuss a cybersecurity, blockchain, AI, DeFi or cryptography engineering project with MBM Technologies." };
+export const metadata: Metadata = { title: "Start a Project", description: "Discuss a cybersecurity, blockchain, AI, DeFi or cryptography engineering project with MBM Technologies.", alternates: { canonical: "/contact" } };
 
 export default function ContactPage() {
   return <main>
     <PageHero index="06" eyebrow="START A PROJECT" title="Bring us the complex system—not a simplified version of it." description="Tell us what the system must achieve, what cannot fail and where the uncertainty sits. We will use that context to structure a serious first conversation." />
     <section className="content-section shell form-section">
-      <div className="form-intro"><p className="eyebrow"><span />PROJECT BRIEF</p><h2>Define the mission.</h2><p>We work best on consequential infrastructure where security, intelligence, distributed systems or economic design materially affect the outcome.</p><div className="signal-list"><span>CYPRUS / GLOBAL <i /></span><span>RESEARCH-LED <i /></span><span>SECURITY-FIRST <i /></span></div></div>
+      <div className="form-intro"><p className="eyebrow"><span />PROJECT BRIEF</p><h2>Define the mission.</h2><p>We work best on consequential infrastructure where security, intelligence, distributed systems or economic design materially affect the outcome.</p><div className="signal-list"><span>CYPRUS / GLOBAL <i /></span><span>RESEARCH-LED <i /></span><span>SECURITY-FIRST <i /></span></div>{company.email && <div className="contact-direct"><span>PREFER EMAIL?</span><a href={`mailto:${company.email}`}>{company.email}</a></div>}</div>
       <SubmissionForm kind="project" />
     </section>
     <section className="project-fit-section"><div className="shell">

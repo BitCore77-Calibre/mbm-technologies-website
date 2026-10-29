@@ -8,6 +8,13 @@
       "when": 1786178235841,
       "tag": "0000_wandering_next_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793300000000,
+      "tag": "0001_rate_limits",
+      "breakpoints": true
     }
   ]
 }

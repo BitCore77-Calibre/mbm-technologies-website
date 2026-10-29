@@ -1,11 +1,10 @@
 import Link from "next/link";
-import Image from "next/image";
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link className="brand" href="/" aria-label="MBM Technologies home">
       <span className="official-logo-crop" aria-hidden="true">
-        <Image src="/MBM LOGO.png" alt="" width={360} height={240} priority />
+        <img src="/mbm-logo.webp" alt="" width={422} height={160} decoding="async" />
       </span>
       {!compact && (
         <span className="brand-copy">

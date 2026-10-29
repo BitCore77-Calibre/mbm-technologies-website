@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageHero } from "../../components/page-hero";
 import { capabilities } from "../../lib/content";
 
-export const metadata: Metadata = { title: "Capabilities", description: "Integrated cybersecurity, blockchain, AI, DeFi, cryptography and cryptoeconomic engineering capabilities." };
+export const metadata: Metadata = { title: "Capabilities", description: "Integrated cybersecurity, blockchain, AI, DeFi, cryptography and cryptoeconomic engineering capabilities.", alternates: { canonical: "/capabilities" } };
 
 const details = [
   ["Security architecture and zero-trust design", "Detection engineering and security operations", "Adversarial testing and incident readiness", "Smart-contract and protocol security"],

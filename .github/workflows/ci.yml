@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Type check (report only for now)
+        run: npm run typecheck
+        continue-on-error: true
+      - name: Build and run tests (public settings, no localhost links)
+        run: bash scripts/ci-report.sh npm test
+        env:
+          VITE_SITE_URL: https://mbm-technologies.com
+          VITE_SHOW_LOCAL_PORTALS: "false"
+      - name: Show generated Worker settings
+        if: always()
+        run: |
+          if [ -f dist/server/wrangler.json ]; then
+            echo "::notice title=Generated wrangler.json::$(tr -d '\n' < dist/server/wrangler.json | cut -c1-3000)"
+          else
+            echo "::notice title=dist contents::$(ls -R dist 2>/dev/null | head -40 | tr '\n' ' ')"
+          fi
+
+  docker:
+    name: Docker image smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build image
+        run: docker build -t mbm-technologies:ci .
+      - name: Start container
+        run: |
+          docker run -d --name mbm -p 3000:3000 \
+            -e ADMIN_PASSWORD="ci-admin-password-123" \
+            mbm-technologies:ci
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/healthz >/dev/null 2>&1; then echo "up after ${i}s"; break; fi
+            sleep 2
+          done
+      - name: Smoke test
+        run: |
+          set -e
+          curl -fsS http://127.0.0.1:3000/ | grep -q "MBM Technologies"
+          curl -fsS http://127.0.0.1:3000/projects/calibre-blockchain | grep -q "CALIBRE"
+          curl -fsS http://127.0.0.1:3000/robots.txt
+          curl -fsS http://127.0.0.1:3000/sitemap.xml | grep -q "<urlset"
+          curl -fsS -o /dev/null http://127.0.0.1:3000/labs/calibre-cybersecurity-test-lab.webp
+          curl -fsS -o /dev/null http://127.0.0.1:3000/mbm-logo.webp
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:3000/api/registrations \
+            -H 'content-type: application/json' \
+            -d '{"type":"project","name":"CI","email":"ci@example.com","message":"Docker smoke test","consent":"yes"}')
+          echo "registration -> $code"; test "$code" = "201"
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/admin)
+          echo "admin without password -> $code"; test "$code" = "401"
+          curl -fsS -u "admin:ci-admin-password-123" http://127.0.0.1:3000/admin | grep -q "ci@example.com"
+          echo "Docker smoke test passed"
+      - name: Screenshots for visual review
+        continue-on-error: true
+        run: |
+          npx -y playwright@1.55.0 install --with-deps chromium >/dev/null
+          mkdir -p screenshots
+          for page in "/" "/projects" "/projects/calibre-blockchain" "/contact" "/privacy" "/missing-page"; do
+            name=$(echo "$page" | sed 's#^/##; s#/#-#g'); name=${name:-home}
+            npx -y playwright@1.55.0 screenshot --full-page --viewport-size=1440,900 "http://127.0.0.1:3000$page" "screenshots/desktop-$name.png"
+          done
+          npx -y playwright@1.55.0 screenshot --full-page --viewport-size=390,844 "http://127.0.0.1:3000/" screenshots/mobile-home.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Container logs
+        if: always()
+        run: docker logs mbm 2>&1 | tail -80

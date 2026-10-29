@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHero } from "../../components/page-hero";
 
-export const metadata: Metadata = { title: "Research", description: "MBM Technologies research across post-quantum cryptography, decentralized governance, AI assurance and cryptographic transparency." };
+export const metadata: Metadata = { title: "Research", description: "MBM Technologies research across post-quantum cryptography, decentralized governance, AI assurance and cryptographic transparency.", alternates: { canonical: "/research" } };
 
 const topics = [
   ["R-01", "Post-quantum transition", "How should long-lived platforms gain cryptographic agility and move toward quantum-resistant primitives without creating a fragile migration event?", "CRYPTOGRAPHY · SYSTEMS"],

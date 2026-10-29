@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowIcon } from "../../components/brand";
 import { PageHero } from "../../components/page-hero";
 
-export const metadata: Metadata = { title: "Company", description: "Learn how MBM Technologies combines global engineering disciplines from its base in Cyprus." };
+export const metadata: Metadata = { title: "Company", description: "Learn how MBM Technologies combines global engineering disciplines from its base in Cyprus.", alternates: { canonical: "/company" } };
 
 export default function CompanyPage() {
   return <main>

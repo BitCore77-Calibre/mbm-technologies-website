@@ -1,4 +1,5 @@
 .git
+.github
 .gitignore
 node_modules
 dist
@@ -8,9 +9,11 @@ dist
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
 coverage
 outputs
 work
+docs
 npm-debug.log*
 *.zip
-

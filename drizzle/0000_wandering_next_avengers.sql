@@ -1,4 +1,4 @@
-CREATE TABLE `registrations` (
+CREATE TABLE IF NOT EXISTS `registrations` (
 	`id` text PRIMARY KEY NOT NULL,
 	`type` text NOT NULL,
 	`name` text NOT NULL,

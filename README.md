@@ -1,141 +1,101 @@
 # MBM Technologies Website
 
-Complete source code for the MBM Technologies corporate website.
+Corporate website of MBM Technologies: capabilities, the CALIBRE post-quantum
+network and laboratories, projects, research, careers and project enquiries.
 
-The site presents MBM's cybersecurity, blockchain, artificial intelligence,
-cryptography, DeFi, research, laboratories, projects, careers, talent-network,
-and project-enquiry programmes. It includes the Calibre laboratory images and
-the current portal links for Calibre Exchange, Calibre Swap, and the Cyprus
-Blockchain Association.
+- **Public website:** runs on Cloudflare Workers (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)).
+- **On your own computer:** runs in Docker with one command (below).
+- **What is still needed before launch:** [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md).
 
-## Fastest start with Docker
+## Run it on your computer (Docker)
 
-### Requirements
-
-- Docker Engine 24 or newer
-- Docker Compose v2
-
-### Start
-
-From this folder, run:
+Requirements: Docker Engine 24+ with Docker Compose v2.
 
 ```bash
-docker compose up --build -d
+cd ~/mbm-technologies-website && cp -n .env.example .env
 ```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
-The first build downloads the locked Node.js packages and can take several
-minutes. Later starts are faster.
-
-### Check status and logs
 
 ```bash
-docker compose ps
-docker compose logs -f website
+cd ~/mbm-technologies-website && docker compose up --build -d
 ```
 
-Press `Ctrl+C` to stop following the logs. The website continues running in
-the background.
+Open <http://localhost:3000>.
 
-### Stop or restart
+Check it is running, or watch the log (press `Ctrl+C` to stop watching):
 
 ```bash
-docker compose down
-docker compose restart website
+cd ~/mbm-technologies-website && docker compose ps
 ```
-
-The registrations database is stored in the named Docker volume
-`mbm-technologies-data`, so normal restarts and `docker compose down` do not
-erase submissions.
-
-To remove the containers and the locally stored registration data:
 
 ```bash
-docker compose down -v
+cd ~/mbm-technologies-website && docker compose logs -f website
 ```
 
-That last command deletes local form submissions, so use it only when you
-intend to reset the local database.
-
-## Use another port
-
-Copy `.env.example` to `.env`, then change `MBM_WEB_PORT`:
+Stop it:
 
 ```bash
-cp .env.example .env
+cd ~/mbm-technologies-website && docker compose down
 ```
 
-For example, `MBM_WEB_PORT=8080` makes the site available at
-`http://localhost:8080`.
+Form submissions are kept in the Docker volume `mbm-technologies-data`, so
+restarts and `docker compose down` keep them. `docker compose down -v`
+deletes them.
 
-By default the container listens only on the local computer. To deliberately
-make it reachable from other devices on the same network, set
-`MBM_BIND_ADDRESS=0.0.0.0` and protect the service with the appropriate firewall
-or reverse-proxy rules.
+After changing anything in `.env`, rebuild:
 
-## Local development without Docker
+```bash
+cd ~/mbm-technologies-website && docker compose up --build -d
+```
 
-Requirements:
+### Settings (`.env`)
 
-- Node.js 22.13 or newer
-- npm
+Everything is explained inside [.env.example](.env.example). The most useful:
+
+| Setting | What it does |
+| --- | --- |
+| `MBM_WEB_PORT` | Port on your computer (default 3000). |
+| `VITE_SHOW_LOCAL_PORTALS` | `true` shows buttons to Calibre Exchange (:3001) and Swap (:3030) running on the same computer. Always `false` on the public site. |
+| `VITE_CALIBRE_WEBSITE_URL` | Public CALIBRE website address, once it has a domain. |
+| `VITE_COMPANY_*`, `VITE_CONTACT_EMAIL` | Company details shown in the footer, contact page and privacy notice. |
+| `ADMIN_PASSWORD` | Turns on the private inbox at `/admin` (12+ characters). |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Telegram alert for each new submission (no personal data in the alert). |
+| `VITE_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare spam check on the forms. |
+
+## Reading form submissions
+
+Set `ADMIN_PASSWORD` in `.env`, rebuild, then open <http://localhost:3000/admin>.
+The browser asks for a user name (type anything, e.g. `admin`) and the password.
+You can filter, change the status (new → reviewed → contacted → archived),
+delete a submission (for privacy requests) and download everything as CSV.
+
+## For developers
+
+Requirements: Node.js 22.13+ and npm.
 
 ```bash
 npm ci
-npm run dev
+npm run dev        # development server with hot reload
+npm test           # production build + automated tests
+npm run lint
 ```
 
-The development server is available at `http://localhost:5173` unless Vite
-selects another free port.
-
-## Production build check
-
-```bash
-npm ci
-npm run build
-```
-
-The build produces the Cloudflare-compatible application in `dist/` and runs
-the included artifact validation.
-
-## Main project structure
+Project layout:
 
 ```text
-app/                    Website routes and pages
-components/             Shared interface components and forms
-db/                     Registration schema
-drizzle/                SQL database migration
-lib/                    Company, project, and portal content
-public/                 Logo, laboratory images, and social preview
-worker/                 Cloudflare Worker and registration API
-scripts/                Build and validation scripts
-tests/                  Rendered-output checks
-Dockerfile              Container image definition
-docker-compose.yml      One-command local deployment
+app/            Pages (Next.js App Router conventions, run by vinext on Vite)
+components/     Shared interface components and the forms
+lib/content.ts  All programme, project, laboratory and role texts
+lib/site-config.ts  Site address, sister-site links, company details
+worker/         Cloudflare Worker: form API, admin inbox, security headers, SEO
+db/, drizzle/   Database schema and migrations (Cloudflare D1 / SQLite)
+public/         Logo, images, social preview
+tests/          Automated tests against the built Worker
+.github/        CI (build, tests, Docker smoke test) and Cloudflare deploy
 ```
 
-## Local portal links
+Technology: TypeScript, React 19, vinext (Next.js-compatible on Vite),
+Tailwind CSS 4, Cloudflare Workers + D1, Drizzle.
 
-The company website uses port `3000`. Its current development gateway buttons
-expect these separate services when they are running on the same computer:
+## Licence
 
-- Calibre Exchange: `http://localhost:3001`
-- Calibre Swap: `http://localhost:3030`
-
-Those services are separate projects and are not bundled into this website
-archive.
-
-## Technology stack
-
-- TypeScript
-- React 19
-- Next.js 16-compatible Vinext runtime
-- Tailwind CSS 4
-- Cloudflare Workers runtime
-- Cloudflare D1-compatible local SQLite storage
-- Drizzle schema and migration
+Proprietary — all rights reserved. See [LICENSE](LICENSE).

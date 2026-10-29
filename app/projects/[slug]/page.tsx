@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowIcon } from "../../../components/brand";
 import { ProjectCard } from "../../../components/project-card";
 import { projectDetails, projects } from "../../../lib/content";
+import { absoluteUrl } from "../../../lib/site-config";
 
 export function generateStaticParams() { return projects.map(({ slug }) => ({ slug })); }
 
@@ -11,12 +12,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const project = projects.find(item => item.slug === slug);
   if (!project) return {};
-  const image = project.image ? `https://mbm-technologies.lakdepal.chatgpt.site${project.image}` : undefined;
+  const image = absoluteUrl(project.image ?? "/og.jpg");
   return {
     title: project.name,
     description: project.summary,
-    openGraph: { title: project.name, description: project.summary, images: image ? [image] : [] },
-    twitter: { card: "summary_large_image", title: project.name, description: project.summary, images: image ? [image] : [] },
+    alternates: { canonical: absoluteUrl(`/projects/${project.slug}`) },
+    openGraph: { title: project.name, description: project.summary, url: absoluteUrl(`/projects/${project.slug}`), images: [image] },
+    twitter: { card: "summary_large_image", title: project.name, description: project.summary, images: [image] },
   };
 }
 
@@ -45,7 +47,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         <section className="project-lab-visual shell" aria-label={`${project.name} laboratory`}>
           <figure>
             <div className="project-lab-frame">
-              <img src={project.image} alt={project.imageAlt ?? ""} width="1536" height="864" />
+              <img src={project.image} alt={project.imageAlt ?? ""} width="1600" height="900" decoding="async" fetchPriority="high" />
               <span className="project-lab-scan" aria-hidden="true" />
             </div>
             <figcaption>
@@ -70,7 +72,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           {project.destinations && (
             <div className="project-destinations">
               <span className="mono">PROGRAMME DESTINATIONS</span>
-              {project.destinations.map(destination => <a href={destination.href} target="_blank" rel={destination.access === "public" ? "noopener noreferrer" : undefined} key={destination.href}><span><strong>{destination.label}</strong><small>{destination.note}</small></span><ArrowIcon /></a>)}
+              {project.destinations.map(destination => <a href={destination.href} target="_blank" rel="noopener noreferrer" key={destination.href}><span><strong>{destination.label}</strong><small>{destination.note}</small></span><ArrowIcon /></a>)}
             </div>
           )}
         </div>

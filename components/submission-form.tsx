@@ -1,13 +1,60 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import Link from "next/link";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowIcon } from "./brand";
+import { siteConfig } from "../lib/site-config";
+
+type TurnstileApi = {
+  render(element: HTMLElement, options: { sitekey: string; theme?: "dark" | "light" | "auto"; action?: string }): string;
+  reset(widgetId?: string): void;
+};
+
+declare global {
+  interface Window { turnstile?: TurnstileApi }
+}
+
+const TURNSTILE_SCRIPT = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+
+/** Loads Cloudflare Turnstile once per page, only when a site key is configured. */
+function loadTurnstile(): Promise<TurnstileApi> {
+  return new Promise((resolve, reject) => {
+    if (window.turnstile) return resolve(window.turnstile);
+    let script = document.querySelector<HTMLScriptElement>(`script[src="${TURNSTILE_SCRIPT}"]`);
+    if (!script) {
+      script = document.createElement("script");
+      script.src = TURNSTILE_SCRIPT;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener("load", () => window.turnstile ? resolve(window.turnstile) : reject(new Error("Turnstile unavailable")));
+    script.addEventListener("error", () => reject(new Error("Turnstile unavailable")));
+  });
+}
 
 type FormKind = "project" | "talent";
 
 export function SubmissionForm({ kind, selectedRole }: { kind: FormKind; selectedRole?: string }) {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    const siteKey = siteConfig.turnstileSiteKey;
+    const element = turnstileRef.current;
+    if (!siteKey || !element) return;
+    let cancelled = false;
+    loadTurnstile()
+      .then(api => {
+        if (!cancelled && widgetId.current === undefined) {
+          widgetId.current = api.render(element, { sitekey: siteKey, theme: "dark", action: kind });
+        }
+      })
+      .catch(() => { /* The server reports a clear error if the check is required. */ });
+    return () => { cancelled = true; };
+  }, [kind]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,12 +68,14 @@ export function SubmissionForm({ kind, selectedRole }: { kind: FormKind; selecte
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ ...data, type: kind }),
       });
-      const result = await response.json() as { message?: string; error?: string };
+      const result = await response.json().catch(() => ({})) as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || "We could not submit your details.");
       setStatus("success");
       setMessage(result.message || "Thank you. Your submission has been received.");
       form.reset();
+      if (window.turnstile && widgetId.current !== undefined) window.turnstile.reset(widgetId.current);
     } catch (error) {
+      if (window.turnstile && widgetId.current !== undefined) window.turnstile.reset(widgetId.current);
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     }
@@ -115,8 +164,9 @@ export function SubmissionForm({ kind, selectedRole }: { kind: FormKind; selecte
       )}
       <label className="checkbox-field">
         <input name="consent" type="checkbox" value="yes" required />
-        <span>I agree that MBM Technologies may use this information to respond to my enquiry and, for talent submissions, consider me for relevant opportunities. *</span>
+        <span>I agree that MBM Technologies may use this information to respond to my enquiry and, for talent submissions, consider me for relevant opportunities, as described in the <Link href="/privacy" target="_blank">privacy notice</Link>. *</span>
       </label>
+      {siteConfig.turnstileSiteKey && <div className="field field-full turnstile-field" ref={turnstileRef} />}
       {status !== "idle" && status !== "sending" && <div className={`form-status ${status}`} role="status">{message}</div>}
       <div className="form-actions">
         <span className="form-note">Fields marked * are required.</span>
