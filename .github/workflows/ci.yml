@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -31,20 +31,25 @@ jobs:
         run: npm run typecheck
         continue-on-error: true
       - name: Build and run tests (public settings, no localhost links)
-        run: npm test
+        run: bash scripts/ci-report.sh npm test
         env:
           VITE_SITE_URL: https://mbm-technologies.com
           VITE_SHOW_LOCAL_PORTALS: "false"
       - name: Show generated Worker settings
         if: always()
-        run: cat dist/server/wrangler.json 2>/dev/null || ls -R dist | head -50
+        run: |
+          if [ -f dist/server/wrangler.json ]; then
+            echo "::notice title=Generated wrangler.json::$(tr -d '\n' < dist/server/wrangler.json | cut -c1-3000)"
+          else
+            echo "::notice title=dist contents::$(ls -R dist 2>/dev/null | head -40 | tr '\n' ' ')"
+          fi
 
   docker:
     name: Docker image smoke test
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build image
         run: docker build -t mbm-technologies:ci .
       - name: Start container

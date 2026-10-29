@@ -9,20 +9,6 @@ import { defineConfig } from "vite";
  */
 const LOCAL_PLACEHOLDER_DATABASE_ID = "00000000-0000-4000-8000-000000000000";
 
-const workerConfig = {
-  name: process.env.CF_WORKER_NAME || "mbm-technologies-website",
-  main: "./worker/index.ts",
-  compatibility_flags: ["nodejs_compat"],
-  d1_databases: [
-    {
-      binding: "DB",
-      database_name: process.env.CF_D1_DATABASE_NAME || "mbm-technologies",
-      database_id: process.env.CF_D1_DATABASE_ID || LOCAL_PLACEHOLDER_DATABASE_ID,
-      migrations_dir: "drizzle",
-    },
-  ],
-  observability: { enabled: true },
-};
 
 export default defineConfig(async () => {
   // Keep Wrangler and Miniflare state inside the project folder.
@@ -47,7 +33,20 @@ export default defineConfig(async () => {
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
-        config: workerConfig,
+        config: {
+          name: process.env.CF_WORKER_NAME || "mbm-technologies-website",
+          main: "./worker/index.ts",
+          compatibility_flags: ["nodejs_compat"],
+          d1_databases: [
+            {
+              binding: "DB",
+              database_name: process.env.CF_D1_DATABASE_NAME || "mbm-technologies",
+              database_id: process.env.CF_D1_DATABASE_ID || LOCAL_PLACEHOLDER_DATABASE_ID,
+              migrations_dir: "drizzle",
+            },
+          ],
+          observability: { enabled: true },
+        },
       }),
     ],
   };
