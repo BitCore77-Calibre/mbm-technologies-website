@@ -1,0 +1,16 @@
+.git
+.gitignore
+node_modules
+dist
+.next
+.sites-runtime
+.wrangler
+.env
+.env.*
+!.env.example
+coverage
+outputs
+work
+npm-debug.log*
+*.zip
+

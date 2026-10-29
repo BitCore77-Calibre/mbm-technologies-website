@@ -1,0 +1,21 @@
+services:
+  website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mbm-technologies:local
+    container_name: mbm-technologies
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    ports:
+      - "${MBM_BIND_ADDRESS:-127.0.0.1}:${MBM_WEB_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    volumes:
+      - mbm-technologies-data:/app/.wrangler/state
+
+volumes:
+  mbm-technologies-data:
+    name: mbm-technologies-data
