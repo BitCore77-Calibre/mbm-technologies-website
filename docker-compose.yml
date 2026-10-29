@@ -3,6 +3,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_SITE_URL: ${VITE_SITE_URL:-}
+        VITE_SHOW_LOCAL_PORTALS: ${VITE_SHOW_LOCAL_PORTALS:-true}
+        VITE_CALIBRE_WEBSITE_URL: ${VITE_CALIBRE_WEBSITE_URL:-}
+        VITE_CALIBRE_EXCHANGE_URL: ${VITE_CALIBRE_EXCHANGE_URL:-}
+        VITE_CALIBRE_SWAP_URL: ${VITE_CALIBRE_SWAP_URL:-}
+        VITE_LOCAL_EXCHANGE_URL: ${VITE_LOCAL_EXCHANGE_URL:-}
+        VITE_LOCAL_SWAP_URL: ${VITE_LOCAL_SWAP_URL:-}
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+        VITE_COMPANY_LEGAL_NAME: ${VITE_COMPANY_LEGAL_NAME:-}
+        VITE_COMPANY_REGISTRATION_NUMBER: ${VITE_COMPANY_REGISTRATION_NUMBER:-}
+        VITE_COMPANY_ADDRESS: ${VITE_COMPANY_ADDRESS:-}
+        VITE_CONTACT_EMAIL: ${VITE_CONTACT_EMAIL:-}
+        VITE_PRIVACY_EMAIL: ${VITE_PRIVACY_EMAIL:-}
+        VITE_LINKEDIN_URL: ${VITE_LINKEDIN_URL:-}
+        VITE_GITHUB_URL: ${VITE_GITHUB_URL:-}
+        VITE_X_URL: ${VITE_X_URL:-}
     image: mbm-technologies:local
     container_name: mbm-technologies
     init: true
@@ -13,6 +30,12 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
+      # Runtime secrets — set them in .env (never commit .env).
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      RATE_LIMIT_SALT: ${RATE_LIMIT_SALT:-}
     volumes:
       - mbm-technologies-data:/app/.wrangler/state
 

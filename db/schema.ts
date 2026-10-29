@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const registrations = sqliteTable("registrations", {
   id: text("id").primaryKey(),
@@ -16,4 +16,11 @@ export const registrations = sqliteTable("registrations", {
   message: text("message").notNull(),
   status: text("status").notNull().default("new"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+/** Short-lived, hashed counters used to limit spam submissions. */
+export const rateLimits = sqliteTable("rate_limits", {
+  bucket: text("bucket").primaryKey(),
+  hits: integer("hits").notNull(),
+  expiresAt: integer("expires_at").notNull(),
 });

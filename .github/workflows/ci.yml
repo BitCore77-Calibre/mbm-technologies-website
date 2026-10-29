@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Type check (report only for now)
+        run: npm run typecheck
+        continue-on-error: true
+      - name: Build and run tests (public settings, no localhost links)
+        run: npm test
+        env:
+          VITE_SITE_URL: https://mbm-technologies.com
+          VITE_SHOW_LOCAL_PORTALS: "false"
+      - name: Show generated Worker settings
+        if: always()
+        run: cat dist/server/wrangler.json 2>/dev/null || ls -R dist | head -50
+
+  docker:
+    name: Docker image smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t mbm-technologies:ci .
+      - name: Start container
+        run: |
+          docker run -d --name mbm -p 3000:3000 \
+            -e ADMIN_PASSWORD="ci-admin-password-123" \
+            mbm-technologies:ci
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/healthz >/dev/null 2>&1; then echo "up after ${i}s"; break; fi
+            sleep 2
+          done
+      - name: Smoke test
+        run: |
+          set -e
+          curl -fsS http://127.0.0.1:3000/ | grep -q "MBM Technologies"
+          curl -fsS http://127.0.0.1:3000/projects/calibre-blockchain | grep -q "CALIBRE"
+          curl -fsS http://127.0.0.1:3000/robots.txt
+          curl -fsS http://127.0.0.1:3000/sitemap.xml | grep -q "<urlset"
+          curl -fsS -o /dev/null http://127.0.0.1:3000/labs/calibre-cybersecurity-test-lab.webp
+          curl -fsS -o /dev/null http://127.0.0.1:3000/mbm-logo.webp
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:3000/api/registrations \
+            -H 'content-type: application/json' \
+            -d '{"type":"project","name":"CI","email":"ci@example.com","message":"Docker smoke test","consent":"yes"}')
+          echo "registration -> $code"; test "$code" = "201"
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/admin)
+          echo "admin without password -> $code"; test "$code" = "401"
+          curl -fsS -u "admin:ci-admin-password-123" http://127.0.0.1:3000/admin | grep -q "ci@example.com"
+          echo "Docker smoke test passed"
+      - name: Container logs
+        if: always()
+        run: docker logs mbm 2>&1 | tail -80

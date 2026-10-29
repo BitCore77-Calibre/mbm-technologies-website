@@ -16,7 +16,7 @@ export function EcosystemPortalCard({ portal, index }: { portal: EcosystemPortal
         <span className="mono">{portal.signal}</span>
         <div className="ecosystem-link-stack">
           {portal.links.map(link => (
-            <a href={link.href} key={`${link.href}-${link.label}`} target={link.access === "internal" ? undefined : "_blank"} rel={link.access === "public" ? "noopener noreferrer" : undefined}>
+            <a href={link.href} key={`${link.href}-${link.label}`} target={link.access === "internal" ? undefined : "_blank"} rel={link.access === "internal" ? undefined : "noopener noreferrer"}>
               <small>{link.access === "local" ? "LOCAL" : link.access === "public" ? "PUBLIC" : "MBM"}</small>
               {link.label} <ArrowIcon />
             </a>

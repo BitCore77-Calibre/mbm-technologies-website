@@ -1,13 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowIcon } from "../components/brand";
 import { ProjectCard } from "../components/project-card";
 import { EcosystemPortalCard } from "../components/ecosystem-portal-card";
 import { SystemOrb } from "../components/system-orb";
 import { capabilities, ecosystemPortals, projects } from "../lib/content";
+import { siteConfig } from "../lib/site-config";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const laboratoryProjects = ["calibre-tests", "calibre-artificial-intelligence-test-lab", "calibre-cybersecurity-test-lab"]
   .map(slug => projects.find(project => project.slug === slug))
   .filter((project): project is NonNullable<typeof project> => Boolean(project));
+
+const numberWords = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+function countWord(count: number) {
+  return numberWords[count] ?? String(count);
+}
 
 export default function Home() {
   return (
@@ -77,11 +86,11 @@ export default function Home() {
           <div className="section-heading compact-heading">
             <div>
               <p className="eyebrow"><span />MBM TECHNOLOGIES ECOSYSTEM</p>
-              <h2>One company.<br /><em>Four dedicated destinations.</em></h2>
+              <h2>One company.<br /><em>{countWord(ecosystemPortals.length)} dedicated destinations.</em></h2>
             </div>
             <p>
-              Enter the specialist portals for Calibre protocol testing, non-custodial exchange engineering,
-              Cyprus blockchain education and advanced trading-intelligence research.
+              Enter the specialist portals for the CALIBRE post-quantum network, Calibre protocol testing,
+              non-custodial exchange engineering, Cyprus blockchain education and advanced trading-intelligence research.
             </p>
           </div>
           <div className="ecosystem-grid">
@@ -89,7 +98,7 @@ export default function Home() {
               <EcosystemPortalCard portal={portal} index={index} key={portal.slug} />
             ))}
           </div>
-          <div className="ecosystem-access-note"><span className="mono">ACCESS GUIDE</span><p><strong>Public</strong> opens an independent live website. <strong>MBM</strong> opens a programme page on this site. <strong>Local</strong> opens a temporary service running on your own computer and is not available to ordinary public visitors.</p></div>
+          <div className="ecosystem-access-note"><span className="mono">ACCESS GUIDE</span><p><strong>Public</strong> opens a live website. <strong>MBM</strong> opens a programme page on this site.{siteConfig.showLocalPortals && <> <strong>Local</strong> opens a development service running on this computer only.</>}</p></div>
         </div>
       </section>
 
@@ -104,7 +113,7 @@ export default function Home() {
         <div className="laboratory-grid">
           {laboratoryProjects.map((project, index) => (
             <Link href={`/projects/${project.slug}`} className={`laboratory-card accent-${project.accent}`} key={project.slug}>
-              <div className="laboratory-image"><img src={project.image} alt={project.imageAlt ?? ""} width="1536" height="864" /></div>
+              <div className="laboratory-image"><img src={project.image} alt={project.imageAlt ?? ""} width="1600" height="900" loading="lazy" decoding="async" /></div>
               <div className="laboratory-card-copy">
                 <span className="mono">LAB / 0{index + 1}</span>
                 <h3>{project.name}</h3>

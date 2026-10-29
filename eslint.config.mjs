@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated output and local tool state:
+    "dist/**",
+    ".wrangler/**",
+    ".vinext/**",
+    "node_modules/**",
   ]),
 ]);
 
